@@ -42,6 +42,19 @@ class Filesystem
     }
 
     /**
+     * Checks if a directory is empty
+     *
+     * @param string $dir
+     * @return bool
+     */
+    public function isDirEmpty($dir)
+    {
+        $dir = rtrim($dir, '/\\');
+
+        return count(glob($dir.'/*') ?: array()) === 0 && count(glob($dir.'/.*') ?: array()) === 2;
+    }
+
+    /**
      * Recursively remove a directory
      *
      * Uses the process component if proc_open is enabled on the PHP
@@ -129,15 +142,12 @@ class Filesystem
     {
         $it = new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS);
         $ri = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::SELF_FIRST);
-
-        if (!file_exists($target)) {
-            mkdir($target, 0777, true);
-        }
+        $this->ensureDirectoryExists($target);
 
         foreach ($ri as $file) {
             $targetPath = $target . DIRECTORY_SEPARATOR . $ri->getSubPathName();
             if ($file->isDir()) {
-                mkdir($targetPath);
+                $this->ensureDirectoryExists($targetPath);
             } else {
                 copy($file->getPathname(), $targetPath);
             }
